@@ -16,14 +16,9 @@ import numpy as np
 Treuhaft & Lanyi (1987): "The effect of the dynamic wet troposphere on radio interferometric measurement", Radio Science, Volume 22, Number 2, Pages 251-265, March-April 1987
 
 Ishimaru ...: TO BE ADDED
-"""
 
-def TreuhaftLanyiCovariance(Cn2, L):
-  """Returns a function handle that computes the isotropic covariance
-  in the model of Treuhaft & Lanyi (1987). Note that they specify the
-  structure function instead.
-  """
-  return lambda r: Cn2*L**(2/3)/(1 + (r/L)**(2/3))
+Gradinarsky, L. P. (2002), Sensing atmospheric water vapor using radio waves, Ph.D. thesis, Chalmers University of Technology, Technical Report No. 436.
+"""
 
 # TODO: Check if this really corresponds to Treuhaft & Lanyi in any respect
 # This is really just a heuristic extension of the Fourier transform of
@@ -33,8 +28,22 @@ def TreuhaftLanyiCovariance(Cn2, L):
 # [Link valid on 2018-05-03]
 def IshimaruSpectrum(Cn2, L0, km):
   """See Nilsson p. 17"""
-  return lambda k: 0.033*Cn2*(k**2 + 1/L0**2)**(-11/6)*np.exp(-(k/km)**2)
+  return lambda kx,ky,kz: 0.033*Cn2*(kx*kx+ky*ky+kz*kz + 1/L0**2)**(-11/6) \
+                          *np.exp(-(kx*kx+ky*ky+kz*kz)/(km*km))
 
+def TreuhaftLanyiCovariance(Cn2, L):
+  """Returns a function handle that computes the isotropic covariance
+  in the model of Treuhaft & Lanyi (1987). Note that they specify the
+  structure function instead.
+  """
+  return lambda x,y,z: Cn2*L**(4/3)/(L**(2/3) + (x*x+y*y+z*z)**(1/3))
+
+def GradinarskyCovariance(Cn2, L, C0):
+  """Returns a function handle that computes the non-isotropic
+  covariance introduced by Gradinarsky (2002)
+  """
+  return lambda x,y,z: Cn2*L**(4/3)/(L**(2/3) + (x*x + y*y + C0*z*z)**(1/3))
+  
 def positionvectors(N,L):
     """Helper for computing DFT compatible positions.
     N -- number of grid points
@@ -61,24 +70,19 @@ def wavenumbers(N,L):
   k = 2*np.pi*k/L
   return k
 
-class IsotropicGenerator:    
+class HomogeneousGenerator:
   def compute_amplitude_from_covariance(self, covariance):
     """Computes the spectral amplitude based on an inputted covariance.
     
-    covariance -- A function handle that computes covariance from a 3D
-                  numpy array of radii. The return value should must
-                  also be 3D.
+    covariance -- A function handle that computes covariance from three
+                  numpy arrays of positions.
     """
     # Generate a "3D" grid (by exploiting broadcasting)
     x = positionvectors(self.Nx,self.Lx).reshape((self.Nx,1,1))
     y = positionvectors(self.Ny,self.Ly).reshape((1,self.Ny,1))
     z = positionvectors(self.Nz,self.Lz).reshape((1,1,self.Nz))
     
-    # Compute the distance from the origin of each point
-    R = np.sqrt(x**2 + y**2 + z**2)
-    
-    C = covariance(R) # Compute covariance function
-    del R # Deallocate (helps with larger sizes)
+    C = covariance(x,y,z) # Compute covariance function
     
     # Compute the variance each independent mode should have
     PhiTilde = np.abs(np.fft.fftn(C, axes=(0,1,2)))
@@ -95,15 +99,12 @@ class IsotropicGenerator:
     ky = wavenumbers(self.Ny,self.Ly).reshape((1,self.Ny,1))
     kz = wavenumbers(self.Nz,self.Lz).reshape((1,1,self.Nz))
     
-    # Compute the magnitude of the wavevector at each point
-    K = np.sqrt(kx**2 + ky**2 + kz**2)
-    
     # TODO: Test that this normalization is consistent
     # To prevent convergence issues, just use a Gaussian Phi/C
     dkx = 2*np.pi/self.Lx
     dky = 2*np.pi/self.Ly
     dkz = 2*np.pi/self.Lz
-    self.A = np.sqrt(dkx*dky*dkz*spectrum(K))
+    self.A = np.sqrt(dkx*dky*dkz*spectrum(kx,ky,kz))
     
   def independent_realization(self):
     self.N = self.A*(np.random.randn(self.Nx,self.Ny,self.Nz)
@@ -118,7 +119,7 @@ class IsotropicGenerator:
     
   def __init__(self, Nx,Ny,Nz, Lx,Ly,Lz,
                covariance=None, spectrum=None, inhomogeneity=None):
-    """ Initialize a new IsotropicGenerator. Needs exactly one of
+    """ Initialize a new HomogeneousGenerator. Needs exactly one of
     'covariance' and 'spectrum' to be set. Otherwise a ValueError is
     thrown.
     """

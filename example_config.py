@@ -24,7 +24,7 @@ for el in (30,45,60):
 Cn2 = 1e-14
 L = 1e3
 H = 3e3
-gen = generator.IsotropicGenerator(Nx,Ny,Nz,Lx,Ly,Lz,
+gen = generator.HomogeneousGenerator(Nx,Ny,Nz,Lx,Ly,Lz,
         covariance=generator.TreuhaftLanyiCovariance(Cn2, L),
         inhomogeneity=lambda z:np.exp(-z/H))
 
