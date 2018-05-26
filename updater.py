@@ -22,6 +22,30 @@ def frequencyToAvoidPeriodicity(gen, wind_x, wind_y):
   ty = gen.Ly/wind_y
   return lambda K: 1/min(tx,ty)
     
+def KolmogorovFrequency(gen, k0):
+  """Uses dimensional analysis in the Kolmogorov way to compute
+  characteristic decorrelation frequencies for each wavenumber.
+  
+  k0 -- The wavenumber at which the decorrelation time is one time unit
+  """
+  return lambda K: (K/k0)**(2/3)
+  
+def KraichmanFrequency(gen, w0):
+  """Uses the approach of Kraichman (1970): All frequencies are
+  independent gaussians with given variance. Furthermore, the time
+  evolution is deterministic.
+  
+  k0 -- The wavenumber at which the decorrelation time is one time unit
+  """
+  return lambda K: 1j*(K/k0)**(2/3)
+    
+class IndependentUpdater:
+  """Computes an independent realization when called"""
+  def update(self, gen, dt):
+    gen.independent_realization()
+  #def __init__(self):
+    # Nothing
+    
 class IntrinsicUpdater:
   def compute_frequencies(self, gen, frequency):
     """Compute the frequencies of intrinsic variation. The supplied

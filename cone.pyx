@@ -275,7 +275,7 @@ def compute_weights(Nx,Ny,Nz, Lx,Ly,Lz, cone):
         lasti = i
         w = index2weight_originCell(cone, ix,iy,iz, weightDict)
         #print('origin:', w, i-lasti)
-      elif max(dx,dy,dz)/dist > 0.75*hpbw:
+      elif max(dx,dy,dz)/dist > hpbw:
         lasti = i
         w = index2weight_accurate(cone, ix,iy,iz, weightDict)
         #print('accurate:', w, i-lasti)

@@ -37,7 +37,7 @@ def simulate(gen, objects, updaters, sampleTimes, simulationName, cleanStart=Tru
     os.remove('weight_cache.pkl')
   objects = geometry.compute_or_load_weights(gen, objects, cacheName='weight_cache.pkl')
     
-  existingDataFiles = glob('_'.join([simulationName,'out_*.npy']))
+  existingDataFiles = glob('_'.join([simulationName,'out_[0-9][0-9][0-9]*.npy']))
   if len(existingDataFiles) == 0:
     outFileName = '_'.join([simulationName,'out_000.npy'])
   else:
@@ -46,7 +46,7 @@ def simulate(gen, objects, updaters, sampleTimes, simulationName, cleanStart=Tru
     outFileName = '_'.join([simulationName, 'out_%03d.npy' % (numbers[-1]+1,)])
     
   # Create signal array initialized with NaN everywhere
-  signals = 0/np.zeros((len(sampleTimes), len(objects)+1,))
+  signals = np.full((len(sampleTimes), len(objects)+1,), np.nan)
   
   def safetysave():
     print('    Saving progress')

@@ -13,7 +13,7 @@ Lx,Ly,Lz = 50e3,50e3,10e3
 
 # 1b)
 objects = []
-#objects.append(Cone(origin=[Lx/2,Ly/2,0],hpbw=5,elevation=60,azimuth=30))
+objects.append(Cone(origin=[Lx/2,Ly/2,0],hpbw=5,elevation=60,azimuth=30))
 for el in (30,45,60):
   for az in range(0,360,15):
     #objects.append(Cone(elevation=el,azimuth=az,origin=(0,0,0),hpbw=3))
@@ -41,4 +41,4 @@ updaters.append(updater.IntrinsicUpdater(gen,
 # Unless 'cleanStart' is set to True (default is False)
 simulationName = 'example'
 T = 0.5*np.arange(1000)
-simulator.simulate(gen, objects, updaters, T, simulationName, cleanStart=False)
+simulator.simulate(gen, objects, updaters, T, simulationName, cleanStart=True)

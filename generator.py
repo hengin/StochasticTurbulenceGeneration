@@ -26,10 +26,10 @@ Gradinarsky, L. P. (2002), Sensing atmospheric water vapor using radio waves, Ph
 # which only exists in an asymptotic sense.
 # See: https://en.wikipedia.org/wiki/Fourier_transform#Distributions
 # [Link valid on 2018-05-03]
-def IshimaruSpectrum(Cn2, L0, km):
+def IshimaruSpectrum(Cn2, L0, km=np.inf):
   """See Nilsson p. 17"""
-  return lambda kx,ky,kz: 0.033*Cn2*(kx*kx+ky*ky+kz*kz + 1/L0**2)**(-11/6) \
-                          *np.exp(-(kx*kx+ky*ky+kz*kz)/(km*km))
+  return lambda kx,ky,kz: 0.033*Cn2*(kx*kx+ky*ky+kz*kz+1/L0**2)**(-11/6)\
+                                   *np.exp(-(kx*kx+ky*ky+kz*kz)/(km*km))
 
 def TreuhaftLanyiCovariance(Cn2, L):
   """Returns a function handle that computes the isotropic covariance
@@ -113,7 +113,7 @@ class HomogeneousGenerator:
   def get_current_field(self):
     n = np.fft.fftn(self.N, axes=(0,1,2))
     n = np.real(n)
-    if self.inhomogeneity != None:
+    if self.inhomogeneity is not None:
       n *= self.inhomogeneity
     return n
     
@@ -124,22 +124,22 @@ class HomogeneousGenerator:
     thrown.
     """
     # Handle errors
-    if covariance != None and spectrum != None:
+    if covariance is not None and spectrum is not None:
       raise ValueError('Accepts exactly one of the covariance and spectrum\n'
                      + 'parameters. Not both at the same time!')
-    if covariance == None and spectrum == None:
+    if covariance is None and spectrum is None:
       raise ValueError('Either the spectrum or covariance must be specified.')
     
     # If everything seems ok, construct the object
     self.Nx,self.Ny,self.Nz = Nx,Ny,Nz
     self.Lx,self.Ly,self.Lz = Lx,Ly,Lz
     # Compute frequency domain amplitudes
-    if covariance != None:
+    if covariance is not None:
       self.compute_amplitude_from_covariance(covariance)
     else:
       self.compute_amplitude_from_spectrum(spectrum)
       
-    if inhomogeneity == None:
+    if inhomogeneity is None:
       self.inhomogeneity = None
     else:
       z = Lz*np.arange(Nz).reshape((1,1,Nz))/Nz
@@ -148,3 +148,18 @@ class HomogeneousGenerator:
     # Initial frequency domain realization
     self.independent_realization()  
 
+class WhiteNoiseGenerator:
+  """Used for testing other code."""
+  
+  def independent_realization(self):
+    self.N = np.sqrt(self.variance)*np.random.randn(self.Nx,self.Ny,self.Nz)
+                
+  def get_current_field(self):
+    return self.N
+  
+  def __init__(self, Nx,Ny,Nz, Lx,Ly,Lz, variance=1):
+    self.Nx,self.Ny,self.Nz = Nx,Ny,Nz
+    self.Lx,self.Ly,self.Lz = Lx,Ly,Lz
+    self.variance = variance
+    self.independent_realization()
+    

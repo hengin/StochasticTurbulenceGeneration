@@ -38,7 +38,7 @@ def computeWeights(inds, pos, dX,dY,dZ):
   # The default value is important for the "+=" statements above
   weightDict = defaultdict(lambda: 0)
   
-  for i in xrange(len(inds)):
+  for i in range(len(inds)):
     x1,y1,z1 = pos[i]
     x2,y2,z2 = pos[i+1]
     dx,dy,dz = x2-x1,y2-y1,z2-z1
@@ -86,8 +86,8 @@ def computeWeights(inds, pos, dX,dY,dZ):
   # rc = [(ix,iy,iz) for ix in (0,1) for iy in (0,1) for iz in (0,1)]
   # rc = np.array(rc, dtype=np.float)
   # C = covariance(rc, rc)
-  # #for i in xrange(8):
-  # #  for j in xrange(8):
+  # #for i in range(8):
+  # #  for j in range(8):
   # #    C[i,j] = covariance(r[i],r[j])
   
   # # Define samples
