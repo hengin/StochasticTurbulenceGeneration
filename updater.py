@@ -30,14 +30,21 @@ def KolmogorovFrequency(gen, k0):
   """
   return lambda K: (K/k0)**(2/3)
   
-def KraichmanFrequency(gen, w0):
-  """Uses the approach of Kraichman (1970): All frequencies are
+def KraichnanFrequency(gen, w0):
+  """Uses the approach of Kraichnan (1970): All frequencies are
   independent gaussians with given variance. Furthermore, the time
   evolution is deterministic.
   
   k0 -- The wavenumber at which the decorrelation time is one time unit
   """
-  return lambda K: 1j*(K/k0)**(2/3)
+  return lambda K: 1j*w0*np.random.standard_normal(K.shape)
+    
+def frequencyToAvoidPeriodicityAndKolmogorov(gen,wind_x,wind_y,k0):
+  tx = gen.Lx/wind_x
+  ty = gen.Ly/wind_y
+  w_min = 1/min(tx,ty)
+  
+  return lambda K: (w_min**2 + (K/k0)**2)**(1/3)
     
 class IndependentUpdater:
   """Computes an independent realization when called"""
@@ -68,9 +75,15 @@ class IntrinsicUpdater:
     self.W = frequency(K)
     
   def update(self, gen, dt):
+    """Update each wavemode as an Ornstein-Uhlenbeck process
+       nk(t+dt) = b*nk(t) + a*sqrt(1-b*conj(b))*xi
+    """
     # Split the calculation in an effort to reduce memory requirements
     dN = np.random.randn(gen.Nx,gen.Ny,gen.Nz) + 0j
     dN += 1j*np.random.randn(gen.Nx,gen.Ny,gen.Nz)
+    # Note that having unit variance on both the imaginary and real
+    # parts is correct. Because that is how 'N' is generated in the
+    # first place. No 1/sqrt(2) "correction" should be applied.
     dN *= gen.A
     dN *= np.sqrt((1-np.exp(-2*dt*np.real(self.W))))
     

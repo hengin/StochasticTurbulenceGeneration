@@ -29,10 +29,8 @@ cdef: # Constant parameters for the weight function
   double dx,dy,dz # Physical cube size
   double cutoff
   
-cdef int i = 0
 cdef double weight(double ix, double iy, double iz):
   global v1, v2, v3, a, mx,my,mz,kx,ky,kz, dx,dy,dz, i
-  i += 1
   cdef:
     # Compute physical position wrt origin of cone
     double x = x0 + dx*ix
@@ -237,7 +235,7 @@ def compute_weights(Nx,Ny,Nz, Lx,Ly,Lz, cone):
   # Far away the angular and radial dependencies are negligible and we
   # get a characteristic value of a/pi*dx*dy*dz/dist**2. This is a good
   # starting point for the cutoff.
-  global cutoff,i
+  global cutoff
   cutoff = 1e-4*nfact*dx*dy*dz/(Lz/v3)**2
   
   # Initialize weight dictionary/map
@@ -264,31 +262,25 @@ def compute_weights(Nx,Ny,Nz, Lx,Ly,Lz, cone):
     iy = int(y)
     print(ix,iy,iz)
     cellsToVisit = [(ix,iy)]
-    cellsAdded = {(ix,iy): 1}
-    # bfs loop over cells, stopping when cutoff is reached
+    cellsAdded = {(ix,iy)}
+    # Flood fill over cells in the current plane, stopping when cutoff is reached
     while len(cellsToVisit) > 0:
       ix,iy = cellsToVisit.pop()
       
       dist = sqrt((dx*(.5+ix-x1))**2 + (dy*(.5+iy-y1))**2 + (dz*(.5+iz-z1))**2)
       
       if (ix,iy,iz) in originCells:
-        lasti = i
         w = index2weight_originCell(cone, ix,iy,iz, weightDict)
-        #print('origin:', w, i-lasti)
       elif max(dx,dy,dz)/dist > hpbw:
-        lasti = i
         w = index2weight_accurate(cone, ix,iy,iz, weightDict)
-        #print('accurate:', w, i-lasti)
       else:
-        lasti = i
         w = index2weight_cheap(cone, ix,iy,iz, weightDict)
-        #print('cheap:', w, i-lasti)
         
       if w > cutoff:
         for cx,cy in [(-1,0),(1,0),(0,-1),(0,1)]:
           pointToAdd = (ix+cx,iy+cy)
           if pointToAdd not in cellsAdded:
-            cellsAdded[pointToAdd] = 1
+            cellsAdded.add(pointToAdd)
             cellsToVisit.append(pointToAdd)
    
   for key in list(weightDict.keys()):

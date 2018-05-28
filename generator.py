@@ -99,8 +99,7 @@ class HomogeneousGenerator:
     ky = wavenumbers(self.Ny,self.Ly).reshape((1,self.Ny,1))
     kz = wavenumbers(self.Nz,self.Lz).reshape((1,1,self.Nz))
     
-    # TODO: Test that this normalization is consistent
-    # To prevent convergence issues, just use a Gaussian Phi/C
+    # It has been verified that this is the correct normalization
     dkx = 2*np.pi/self.Lx
     dky = 2*np.pi/self.Ly
     dkz = 2*np.pi/self.Lz
@@ -146,8 +145,95 @@ class HomogeneousGenerator:
       self.inhomogeneity = np.sqrt(inhomogeneity(z))
       
     # Initial frequency domain realization
-    self.independent_realization()  
+    self.independent_realization()
 
+class LogNormalGenerator:
+  def compute_amplitude_from_covariance(self, covariance):
+    """Computes the spectral amplitude based on an inputted covariance.
+    
+    covariance -- A function handle that computes covariance from three
+                  numpy arrays of positions.
+    """
+    # Generate a "3D" grid (by exploiting broadcasting)
+    x = positionvectors(self.Nx,self.Lx).reshape((self.Nx,1,1))
+    y = positionvectors(self.Ny,self.Ly).reshape((1,self.Ny,1))
+    z = positionvectors(self.Nz,self.Lz).reshape((1,1,self.Nz))
+    
+    C = covariance(x,y,z)/covariance(0,0,0) # Sample the (normalized) covariance
+    
+    # Compute the variance each independent mode should have
+    PhiTilde = np.abs(np.fft.fftn(C, axes=(0,1,2)))
+    # Correctly normalize for applications to come
+    PhiTilde /= self.Nx*self.Ny*self.Nz
+    del C # Deallocate
+    
+    # Store the amplitude instead of the amplitude squared
+    self.A = np.sqrt(PhiTilde)  
+    
+  def compute_amplitude_from_spectrum(self, spectrum):
+    # Generate a 3D grid (by broadcasting)
+    kx = wavenumbers(self.Nx,self.Lx).reshape((self.Nx,1,1))
+    ky = wavenumbers(self.Ny,self.Ly).reshape((1,self.Ny,1))
+    kz = wavenumbers(self.Nz,self.Lz).reshape((1,1,self.Nz))
+    
+    dkx = 2*np.pi/self.Lx
+    dky = 2*np.pi/self.Ly
+    dkz = 2*np.pi/self.Lz
+    self.A = dkx*dky*dkz*spectrum(kx,ky,kz)
+    # TODO: Test that this normalization is consistent
+    # To prevent convergence issues, just use a Gaussian Phi/C
+    C0 = np.sum(self.A)
+    print('C(0) = %g' % C0)
+    self.A = np.sqrt(self.A/C0)
+    
+  def independent_realization(self):
+    self.N = self.A*(np.random.randn(self.Nx,self.Ny,self.Nz)
+                + 1j*np.random.randn(self.Nx,self.Ny,self.Nz))
+                
+  def get_current_field(self):
+    n = np.fft.fftn(self.N, axes=(0,1,2))
+    n = np.real(n)
+    return self.mean*np.exp(n*self.relsd)
+    
+  def __init__(self, Nx,Ny,Nz, Lx,Ly,Lz, mean, sd=None, relsd=None,
+               covariance=None, spectrum=None):
+    """ Initialize a new HomogeneousGenerator. Needs exactly one of
+    'covariance' and 'spectrum' to be set. Otherwise a ValueError is
+    thrown.
+    """
+    # Handle errors
+    if covariance is not None and spectrum is not None:
+      raise ValueError('Accepts exactly one of the covariance and spectrum\n'
+                     + 'parameters. Not both at the same time!')
+    if covariance is None and spectrum is None:
+      raise ValueError('Either the spectrum or covariance must be specified.')
+      
+    if sd is not None and relsd is not None:
+      raise ValueError('Accepts exactly one of the sd and relsd\n'
+                     + 'parameters. Not both at the same time!')
+    if sd is None and relsd is None:
+      raise ValueError('Either sd or relsd must be specified.')
+      
+    
+    # If everything seems ok, construct the object
+    self.Nx,self.Ny,self.Nz = Nx,Ny,Nz
+    self.Lx,self.Ly,self.Lz = Lx,Ly,Lz
+    # Compute frequency domain amplitudes
+    if covariance is not None:
+      self.compute_amplitude_from_covariance(covariance)
+    else:
+      self.compute_amplitude_from_spectrum(spectrum)
+      
+    z = np.reshape(np.arange(Nz)/Lz, (1,1,Nz))
+    self.mean = mean(z)
+    if sd is not None:
+      self.relsd = sd(z)/self.mean
+    else:
+      self.relsd = relsd(z)
+      
+    # Initial frequency domain realization
+    self.independent_realization()
+    
 class WhiteNoiseGenerator:
   """Used for testing other code."""
   
