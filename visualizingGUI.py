@@ -239,27 +239,24 @@ class SizeWidget(pg.LayoutWidget):
     currRow = 0
     for i,txt in enumerate(['x','y','z']):
       self.addWidget(QtGui.QLabel(txt,
-          alignment=QtCore.Qt.AlignHCenter | QtCore.Qt.AlignBottom,
-          size=QtCore.QSize(1,1)),
+          alignment=QtCore.Qt.AlignHCenter | QtCore.Qt.AlignBottom),
           row=currRow, col=i+1)
     currRow += 1
     
     # Resolution row
     self.addWidget(QtGui.QLabel('N:',
-        alignment=QtCore.Qt.AlignRight | QtCore.Qt.AlignVCenter,
-        size=QtCore.QSize(1,1)),
+        alignment=QtCore.Qt.AlignRight | QtCore.Qt.AlignVCenter),
         row=currRow, col=0)
     global NspinBoxes
-    NspinBoxes = [QtGui.QSpinBox(value=16, minimum=1,maximum=1024,
-                  size=QtCore.QSize(1,1)) for _ in range(3)]
+    NspinBoxes = [QtGui.QSpinBox(value=16, minimum=1,maximum=1024) 
+                  for _ in range(3)]
     for i,sb in enumerate(NspinBoxes):
       self.addWidget(sb,row=currRow,col=i+1)
     currRow += 1
     
     # Physical size row
     self.addWidget(QtGui.QLabel('L:',
-        alignment=QtCore.Qt.AlignRight | QtCore.Qt.AlignVCenter,
-        size=QtCore.QSize(1,1)),
+        alignment=QtCore.Qt.AlignRight | QtCore.Qt.AlignVCenter),
         row=currRow, col=0)
     global LspinBoxes
     LspinBoxes = [pg.SpinBox(value=16.,bounds=[0,None],suffix='m',
