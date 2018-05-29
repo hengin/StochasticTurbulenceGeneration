@@ -121,7 +121,7 @@ class GaussParameterWidget(pg.LayoutWidget):
     currRow = 0
     img = renderTeX('$C(\\vec{r})\\propto \\mathrm{exp}(-r^2/a^2)' +
                     '$\n$' +
-                    '\\Phi(\\vec{k}) \propto \\mathrm{exp}(-a^2 k^2/4)$')
+                    '\\Phi(\\vec{k}) \\propto \\mathrm{exp}(-a^2 k^2/4)$')
     eqnLabel = QtGui.QLabel(alignment=QtCore.Qt.AlignHCenter)
     eqnLabel.setPixmap(QtGui.QPixmap.fromImage(img))
     self.addWidget(eqnLabel,row=currRow,col=0,colspan=2)
@@ -152,11 +152,10 @@ class GaussParameterWidget(pg.LayoutWidget):
     return 'Gauss'
     
   def generate(self):
-    print 'Generate pressed'
+    print 'Gauss generation requested'
     Nx,Ny,Nz = [b.value() for b in NspinBoxes]
     Lx,Ly,Lz = [b.value() for b in LspinBoxes]
     a = self.aSpinBox.value()
-    
     
     if self.covRB.isChecked():
       gen = generator.HomogeneousGenerator(Nx,Ny,Nz,Lx,Ly,Lz,
@@ -178,31 +177,86 @@ class IshimaruParameterWidget(pg.LayoutWidget):
     
     currRow = 0
     
-    img = renderTeX('$\\Phi(\\vec{k}) \propto \\frac{\\mathrm{exp}\\left(-(L_{\\mathrm{min}} k)^2\\right)}{\\left(1/{L_0}^2 + k^2\\right)^{-11/6}}$')
+    img = renderTeX('$\\Phi(\\vec{k}) \\propto \\frac{\\mathrm{exp}\\left(-(L_{\\mathrm{min}} k)^2\\right)}{\\left(1/{L_0}^2 + k^2\\right)^{-11/6}}$')
     eqnLabel = QtGui.QLabel(alignment=QtCore.Qt.AlignHCenter)
     eqnLabel.setPixmap(QtGui.QPixmap.fromImage(img))
     self.addWidget(eqnLabel,row=currRow,col=0,colspan=2)
     currRow += 1
     
     self.addWidget(QtGui.QLabel('L0:'), row=currRow, col=0)
-    L0SpinBox = pg.SpinBox(value=2.,bounds=[0,None],suffix='m',
+    self.L0SpinBox = pg.SpinBox(value=2.,bounds=[0,None],suffix='m',
                           siPrefix=True, dec=True, step=1.0, minStep=0.1)
-    self.addWidget(L0SpinBox,row=currRow,col=1)
+    self.addWidget(self.L0SpinBox,row=currRow,col=1)
     currRow += 1
     
     self.addWidget(QtGui.QLabel('Lmin:'), row=currRow, col=0)
-    LminSpinBox = pg.SpinBox(value=0.1,bounds=[0,None],suffix='m',
-                          siPrefix=True, dec=True, step=0.1, minStep=0.1)
-    self.addWidget(LminSpinBox, row=currRow,col=1)
+    self.LminSpinBox = pg.SpinBox(value=0.1,bounds=[0,None],suffix='m',
+                        siPrefix=True, dec=True, step=0.1, minStep=0.1)
+    self.addWidget(self.LminSpinBox, row=currRow,col=1)
     currRow += 1
     
     genButton = QtGui.QPushButton('Generate field')
     self.addWidget(genButton, row=currRow, colspan=2)
+    genButton.clicked.connect(self.generate)
     
     self.setHidden(True)
   
   def getName(self):
     return 'Ishimaru'
+    
+  def generate(self):
+    print 'Ishimaru generation requested'
+    Nx,Ny,Nz = [b.value() for b in NspinBoxes]
+    Lx,Ly,Lz = [b.value() for b in LspinBoxes]
+    
+    Lmin = self.LminSpinBox.value()
+    L0 = self.L0SpinBox.value()
+    
+    gen = generator.HomogeneousGenerator(Nx,Ny,Nz,Lx,Ly,Lz,
+        spectrum=generator.IshimaruSpectrum(1, L0, 1/Lmin if Lmin != 0 else np.inf))
+    
+    volumetricPlot.setData(Nx,Ny,Nz,Lx,Ly,Lz,gen.get_current_field())
+    del gen
+    
+class TreuhaftLanyiParameterWidget(pg.LayoutWidget):
+  def __init__(self):
+    pg.LayoutWidget.__init__(self)
+    
+    currRow = 0
+    
+    img = renderTeX('$D(\\vec{r}) \\propto \\frac{r^{2/3}}{L^{2/3} + r^{2/3}}$')
+    eqnLabel = QtGui.QLabel(alignment=QtCore.Qt.AlignHCenter)
+    eqnLabel.setPixmap(QtGui.QPixmap.fromImage(img))
+    self.addWidget(eqnLabel,row=currRow,col=0,colspan=2)
+    currRow += 1
+    
+    self.addWidget(QtGui.QLabel('L:'), row=currRow, col=0)
+    self.LSpinBox = pg.SpinBox(value=2.,bounds=[0,None],suffix='m',
+                          siPrefix=True, dec=True, step=1.0, minStep=0.1)
+    self.addWidget(self.LSpinBox,row=currRow,col=1)
+    currRow += 1
+    
+    genButton = QtGui.QPushButton('Generate field')
+    self.addWidget(genButton, row=currRow, colspan=2)
+    genButton.clicked.connect(self.generate)
+    
+    self.setHidden(True)
+  
+  def getName(self):
+    return 'Treuhaft & Lanyi'
+    
+  def generate(self):
+    print 'Treuhaft & Lanyi generation requested'
+    Nx,Ny,Nz = [b.value() for b in NspinBoxes]
+    Lx,Ly,Lz = [b.value() for b in LspinBoxes]
+    
+    L = self.LSpinBox.value()
+    
+    gen = generator.HomogeneousGenerator(Nx,Ny,Nz,Lx,Ly,Lz,
+        covariance=generator.TreuhaftLanyiCovariance(1, L))
+    
+    volumetricPlot.setData(Nx,Ny,Nz,Lx,Ly,Lz,gen.get_current_field())
+    del gen
     
 class GeneratorChoiceWidget(pg.LayoutWidget):
   def __init__(self):
@@ -213,7 +267,8 @@ class GeneratorChoiceWidget(pg.LayoutWidget):
     self.addWidget(QtGui.QLabel('Generator type:'), row=0, col=0)
     self.genControllers = [
         GaussParameterWidget(),
-        IshimaruParameterWidget()
+        IshimaruParameterWidget(),
+        TreuhaftLanyiParameterWidget()
       ]
     
     comboBox = QtGui.QComboBox()
@@ -248,7 +303,7 @@ class SizeWidget(pg.LayoutWidget):
         alignment=QtCore.Qt.AlignRight | QtCore.Qt.AlignVCenter),
         row=currRow, col=0)
     global NspinBoxes
-    NspinBoxes = [QtGui.QSpinBox(value=16, minimum=1,maximum=1024) 
+    NspinBoxes = [QtGui.QSpinBox(value=64, minimum=1,maximum=1024) 
                   for _ in range(3)]
     for i,sb in enumerate(NspinBoxes):
       self.addWidget(sb,row=currRow,col=i+1)
@@ -333,7 +388,8 @@ class VolumetricPlot(gl.GLViewWidget):
   
     s.Nx,s.Ny,s.Nz = Nx,Ny,Nz
     s.Lx,s.Ly,s.Lz = Lx,Ly,Lz
-    s.data = data
+    #s.setCameraPosition(distance = 2*np.sqrt(Lx*Lx+Ly*Ly+Lz*Lz))
+    s.data = data/np.max(np.abs(data))
     s.sliceHeight = Nz
     s.updateVolumeData()
     
