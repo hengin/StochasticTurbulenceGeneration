@@ -3,7 +3,13 @@
    TODO: Add ability to add radiometer cones to the plot as well as perform
          live integration of the field
 """
-from __future__ import division
+from __future__ import print_function,division
+import sys
+if sys.version_info < (3,):
+  # Python 2 automatically executes text passed in input().
+  input = raw_input 
+  # In Python 2, range is a full blown list instead of a generator.
+  range = xrange
 import pyqtgraph as pg
 import pyqtgraph.functions
 from pyqtgraph.Qt import QtCore, QtGui
@@ -24,7 +30,7 @@ def renderTeX(string):
   ax.set_axis_off()
   fig.text(0.25,0.75,string, size=20)
   buffer,shape = fig.canvas.print_to_buffer()
-  arr = np.array(buffer,dtype=np.uint8)
+  arr = np.fromstring(buffer, dtype=np.uint8)
   arr = np.reshape(arr, (shape[1],shape[0],4))
 
   # Clean up (otherwise each plt.subplot() could appear as a separate
@@ -152,7 +158,7 @@ class GaussParameterWidget(pg.LayoutWidget):
     return 'Gauss'
     
   def generate(self):
-    print 'Gauss generation requested'
+    print('Gauss generation requested')
     Nx,Ny,Nz = [b.value() for b in NspinBoxes]
     Lx,Ly,Lz = [b.value() for b in LspinBoxes]
     a = self.aSpinBox.value()
@@ -165,7 +171,7 @@ class GaussParameterWidget(pg.LayoutWidget):
         spectrum=lambda kx,ky,kz: a**3/8/np.pi**(3/2)
                  *np.exp(-a*a*(kx*kx+ky*ky+kz*kz)/4))
     else:
-      print 'Select covariance or spectrum'
+      print('Select covariance or spectrum')
       return
     
     volumetricPlot.setData(Nx,Ny,Nz,Lx,Ly,Lz,gen.get_current_field())
@@ -205,7 +211,7 @@ class IshimaruParameterWidget(pg.LayoutWidget):
     return 'Ishimaru'
     
   def generate(self):
-    print 'Ishimaru generation requested'
+    print('Ishimaru generation requested')
     Nx,Ny,Nz = [b.value() for b in NspinBoxes]
     Lx,Ly,Lz = [b.value() for b in LspinBoxes]
     
@@ -246,7 +252,7 @@ class TreuhaftLanyiParameterWidget(pg.LayoutWidget):
     return 'Treuhaft & Lanyi'
     
   def generate(self):
-    print 'Treuhaft & Lanyi generation requested'
+    print('Treuhaft & Lanyi generation requested')
     Nx,Ny,Nz = [b.value() for b in NspinBoxes]
     Lx,Ly,Lz = [b.value() for b in LspinBoxes]
     
