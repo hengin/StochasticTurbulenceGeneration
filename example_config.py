@@ -40,5 +40,5 @@ updaters.append(updater.IntrinsicUpdater(gen,
 # If such a directory already exists it tries to reuse old data
 # Unless 'cleanStart' is set to True (default is False)
 simulationName = 'example'
-T = 0.5*np.arange(1000)
+T = 0.5*np.arange(10)
 simulator.simulate(gen, objects, updaters, T, simulationName, cleanStart=True)
