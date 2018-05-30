@@ -44,7 +44,7 @@ def frequencyToAvoidPeriodicityAndKolmogorov(gen,wind_x,wind_y,k0):
   ty = gen.Ly/wind_y
   w_min = 1/min(tx,ty)
   
-  return lambda K: (w_min**2 + (K/k0)**2)**(1/3)
+  return lambda K: w_min*(1 + (K/k0)**2)**(1/3)
     
 class IndependentUpdater:
   """Computes an independent realization when called"""
