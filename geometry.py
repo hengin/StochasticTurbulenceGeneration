@@ -24,7 +24,7 @@ is marked with 'C' and grid points with 'o'.
 # role is reserved for '//' (5/2 == 2.5 and 5//2 == 2)
 from __future__ import print_function,division
 import sys
-if sys.version < (3,):
+if sys.version_info < (3,):
   # Python 2 automatically executes text passed in input()
   input = raw_input 
   # In Python 2 range is a full blown list instead of a generator

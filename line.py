@@ -4,7 +4,7 @@
 # role is reserved for '//' (5/2 == 2.5 and 5//2 == 2).
 from __future__ import print_function,division
 import sys
-if sys.version < (3,):
+if sys.version_info < (3,):
   # Python 2 automatically executes text passed in input().
   input = raw_input 
   # In Python 2, range is a full blown list instead of a generator.
@@ -206,8 +206,8 @@ def line2weights(gen, line):
   # Integrate up weights
   weightDict = computeWeights(inds, pos, dx,dy,dz)
     
-  inds, weights = weightDict.keys(), weightDict.values()
-  
+  inds, weights = zip(*weightDict.items())
+
   # Extract 1d indices
   inds = [ind[2] + (ind[1] % gen.Ny)*gen.Nz 
                  + (ind[0] % gen.Nx)*gen.Nz*gen.Ny
@@ -218,7 +218,7 @@ def line2weights(gen, line):
     raise ValueError('Infeasible line parameters')
     
   # Sort indices and weights so that they are as cache friendly as possible
-  order = sorted(list(range(len(inds))), key=lambda i:inds[i])
+  order = sorted(range(len(inds)), key=lambda i:inds[i])
   
   # Package into numpy arrays and return
   inds = np.array([inds[i] for i in order], dtype=np.int32)
