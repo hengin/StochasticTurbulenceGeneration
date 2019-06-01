@@ -283,6 +283,9 @@ class GeneratorChoiceWidget(pg.LayoutWidget):
     comboBox.currentIndexChanged.connect(self.changeGenerator)
     
     self.addWidget(comboBox, row=0, col=1)
+    
+    # Also make sure a generator widget is added
+    self.changeGenerator(0)
 
   def changeGenerator(self, ind):
     if self.lastInd != -1:
@@ -358,6 +361,9 @@ class VolumetricPlot(gl.GLViewWidget):
     volItem.scale(Lx/Nx, Ly/Ny, Lz/Nz)
     self.addItem(volItem)
     self.volItem = volItem # store a reference
+    
+    # Move to a reasonable viewing distance
+    self.setCameraPosition(distance = 2*np.sqrt(Lx*Lx+Ly*Ly+Lz*Lz))
     
     self.updateVolumeData()
     

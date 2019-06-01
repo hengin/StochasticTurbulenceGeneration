@@ -1,9 +1,19 @@
 # StochasticTurbulenceGeneration
 Python code to generate passive 3d+time fields representing a passive scalar being convected by Kolmogorov turbulence.
 
+The method and some background is described in the Master's thesis 
+H. Gingsjö, "Modelling and simulation of tropospheric water vapour with gaussian random fields - Time dependence beyond the frozen flow hypothesis", M.S. thesis, Department of Space, Earth and Environment, Chalmers University of Technology, Gothenburg, Sweden, 2018. [Online]. Available: http://studentarbeten.chalmers.se/publication/255146-modelling-and-simulation-of-tropospheric-water-vapour-with-gaussian-random-fields-time-dependence-be [link valid 2019-06-01]
+
 Dependencies:
-Python 2 or 3 (should be version agnostic) with modules cython, numpy and scipy.
+Python 2 or 3 (should be version agnostic) with modules cython, numpy and scipy. The small visualization program additionally requires pyqtgraph and OpenGL.
 (Probably plus some more that I've forgotten about)
+
+
+A visualization program that can show some sample realizations of random 3D-fields with different statistics can be run with
+```bash
+python visualizingGUI.py
+```
+
 
 To run the software first run
 ```bash
